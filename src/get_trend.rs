@@ -8,9 +8,6 @@ pub mod coinbase;
 pub mod kraken;
 pub mod bitget;
 pub mod okx;
-
-
-
 use crate::config;
 
 
@@ -123,7 +120,6 @@ pub async fn connect(tx_out: watch::Sender<f64>) -> Result<(), Box<dyn std::erro
         if count < 4 {
             continue;
         }
-
 
         let new_price = weighted_sum / weight_sum as f64;
 

@@ -3,13 +3,7 @@ use polymarket_client_sdk::POLYGON;
 use polymarket_client_sdk::auth::{LocalSigner, Signer};
 use polymarket_client_sdk::clob::{Client, Config};
 use polymarket_client_sdk::clob::types::SignatureType;
-use polymarket_client_sdk::clob::types::request::BalanceAllowanceRequest;
-use polymarket_client_sdk::clob::types::AssetType;
-use reqwest::get;
-use tokio::time::error::Elapsed;
 use polymarket_client_sdk::clob::types::{Amount, Side, OrderType};
-use tokio_tungstenite::tungstenite::util;
-use std::thread;
 use polymarket_client_sdk::types::Decimal;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -46,16 +40,25 @@ async fn main() -> anyhow::Result<()> {
             continue
         }
 
-        let private_key = std::env::var("PRIVATE_KEY").expect("Need a private key");
+        let private_key = std::env::var("PRIVATE_KEY")
+            .expect("You have not inputted your private key\n
+            Please in the ROOT folder (not in src) create a .env file and inside Write:\n\n
+            PRIVATE_KEY = 0x...\n
+            Note that if the 0x part is not at the start of your private key\n
+            You must add the 0x \n");
+        let funder_key = std::env::var("FUNDER_KEY")
+            .expect("The funder key should be the PUBLIC key\n
+            Of your polymarket proxy wallet found in your profile\n\n
+            FUNDER_KEY = x0...\n\n
+            Again starting with x0 if its not their already
+            ");
         let signer = LocalSigner::from_str(&private_key)?.with_chain_id(Some(POLYGON));
         let client = Client::new("https://clob.polymarket.com", Config::default())?
             .authentication_builder(&signer)
             .signature_type(SignatureType::GnosisSafe)
-            .funder("0xa11Dae4CE8C30bC6F75334879Cc478E506911D0d".parse()?)
+            .funder(funder_key.parse()?)
             .authenticate()
             .await?;
-
-
 
         let event_slug = format!("btc-updown-15m-{}", time_15_min);
 
@@ -63,7 +66,7 @@ async fn main() -> anyhow::Result<()> {
 
         let tokens = match raw_tokens {
             Ok(t) => t,
-            Err(e) => {
+            Err(_) => {
                 eprintln!("ERROR");
                 continue;
             }
@@ -84,8 +87,6 @@ async fn main() -> anyhow::Result<()> {
         });
 
         rx_price_info.changed().await?;
-
-
 
         loop {
             match rx_trend.changed().await {
@@ -159,8 +160,6 @@ async fn main() -> anyhow::Result<()> {
                                         if response.success {
                                             let making_amount = response.making_amount.to_string().parse::<f64>().ok().unwrap_or(0.0);
                                             amount_to_sell -= (making_amount * 100.0).floor() / 100.0;
-                                            // let new_amount_str = format!("{:.2}", amount_to_sell);
-                                            // let amount_dec = Decimal::from_str(&new_amount_str).unwrap();
                                             if amount_to_sell <= 0.01 {
                                                 println!("Full Sell Fill");
                                                 sleep(Duration::from_secs(3)).await;
@@ -175,9 +174,7 @@ async fn main() -> anyhow::Result<()> {
                                     }
                                 }
 
-
 // ------------------------------------------------------------------------------------------------------------------
-
                             }
                         }
 
@@ -197,6 +194,4 @@ async fn main() -> anyhow::Result<()> {
             }
         }
     }
-
-
 }

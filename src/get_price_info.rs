@@ -16,9 +16,6 @@ pub async fn connect(
 
     while let Some(book_result) = stream.next().await {
         let book = book_result?;
-
-        // println!("Update for {}: {} bids, {} asks | Bid: {:.4}, Ask: {:.4}",
-        //     book.asset_id, book.bids.len(), book.asks.len(), best_bid, best_ask);
         
         if let (Some(best_bid), Some(best_ask)) = 
             (book.bids.last(), book.asks.last()) {
@@ -28,8 +25,6 @@ pub async fn connect(
                 let _ = tx.send((best_bid, best_ask));
             }
 
-        // Send the prices through the channel
-        // let _ = tx.send((best_bid, best_ask));
     }
 
     Ok(())
