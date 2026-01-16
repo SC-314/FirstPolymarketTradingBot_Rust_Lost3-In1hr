@@ -115,8 +115,8 @@ async fn main() -> anyhow::Result<()> {
 
                                 let response = match client.post_order(signed_order).await {
                                     Ok(resp) => resp,
-                                    Err(e) => {
-                                        println!("Error buy posting order: {}", e);
+                                    Err(_) => {
+                                        // println!("Error buy posting order: {}", e);
                                         continue
                                     }
                                 };
@@ -145,12 +145,12 @@ async fn main() -> anyhow::Result<()> {
 
                                         let response = match client.post_order(signed_order).await {
                                             Ok(resp) => resp,
-                                            Err(e) => {
+                                            Err(_) => {
                                                 amount_to_sell -= 0.01;
                                                 if amount_to_sell <= 0.01 {
                                                     break;
                                                 }
-                                                println!("Error posting sell order: {}", e);
+                                                // println!("Error posting sell order: {}", e);
                                                 sleep(Duration::from_millis(500)).await;
                                                 continue;
                                             }
